@@ -23,21 +23,38 @@ CREATE TABLE Programacion_Cirugia (
     CHECK (hora_inicio < hora_fin)
 );
 
--- Trigger para evitar overbooking en quirófano
-CREATE TRIGGER IF NOT EXISTS validar_overbooking
+CREATE TRIGGER trg_valida_quirofano_insert
 BEFORE INSERT ON Programacion_Cirugia
 FOR EACH ROW
 BEGIN
-    SELECT
-    CASE
+    SELECT CASE
         WHEN EXISTS (
-            SELECT 1 FROM Programacion_Cirugia
-            WHERE quirofano_id = NEW.quirofano_id
-              AND fecha = NEW.fecha
-              AND NEW.hora_inicio < hora_fin
-              AND NEW.hora_fin > hora_inicio
+            SELECT 1
+            FROM Programacion_Cirugia pc
+            WHERE pc.id_quirofano = NEW.id_quirofano
+              AND pc.fecha = NEW.fecha
+              AND NEW.hora_inicio < pc.hora_fin
+              AND NEW.hora_fin > pc.hora_inicio
         )
-        THEN
-            RAISE(ABORT, 'ERROR: Quirófano ocupado en ese horario')
+        THEN RAISE(ABORT, 'Error: Quirófano ocupado en ese horario')
+    END;
+END;
+
+-- TRIGGER ANTES DEL UPDATE
+CREATE TRIGGER trg_valida_quirofano_update
+BEFORE UPDATE ON Programacion_Cirugia
+FOR EACH ROW
+BEGIN
+    SELECT CASE
+        WHEN EXISTS (
+            SELECT 1
+            FROM Programacion_Cirugia pc
+            WHERE pc.id_quirofano = NEW.id_quirofano
+              AND pc.fecha = NEW.fecha
+              AND pc.id_programacion <> OLD.id_programacion
+              AND NEW.hora_inicio < pc.hora_fin
+              AND NEW.hora_fin > pc.hora_inicio
+        )
+        THEN RAISE(ABORT, 'Error: Actualización inválida, quirófano ocupado')
     END;
 END;

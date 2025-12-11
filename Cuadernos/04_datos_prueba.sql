@@ -88,9 +88,7 @@
     (mascota_id, veterinario_id, quirofano_id, fecha, hora_inicio, hora_fin)
     VALUES (2, 2, 1, '2025-06-01', '09:30', '10:30');
 
-SELECT evitar_traslape_cirugia, Programacion_Cirugia, sql
-FROM sqlite_master
-WHERE type = 'trigger';
 
-
+DELETE FROM Programacion_Cirugia;
+DROP TABLE Quirofano;
 
